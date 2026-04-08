@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Build the Vite application (outputs to the 'dist' folder)
-RUN npm run build
+RUN npx vite build
 
 
 # Stage 2: Serve the application using Nginx
