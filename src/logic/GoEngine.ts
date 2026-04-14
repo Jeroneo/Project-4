@@ -5,6 +5,7 @@ export class GoEngine {
   board: Player[];
   history: string[] = []; // For Ko Rule detection
   captures = { B: 0, W: 0 }; // Track captured stones
+  stonesRemaining = { B: 181, W: 180 }; // Track remaining pieces
   consecutivePasses: number = 0; // Tracks passes to end the game
   komi: number = 6.5; // Compensation points for White
   isResigned: Player = null;
@@ -57,6 +58,7 @@ export class GoEngine {
 
   placeStone(index: number, player: 'B' | 'W'): boolean {
     if (this.board[index] !== null) return false;
+    if (this.stonesRemaining[player] <= 0) return false;
 
     const originalBoard = [...this.board];
     this.board[index] = player;
@@ -93,6 +95,7 @@ export class GoEngine {
     }
     
     this.history.push(stateStr);
+    this.stonesRemaining[player]--;
     this.captures[player] += turnCaptures;
     this.consecutivePasses = 0; // Reset passes on valid move
     this.lastMoveIndex = index;
