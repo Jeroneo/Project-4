@@ -12,6 +12,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ onScoreUpdate }) => {
   const [hoveredCell, setHoveredCell] = useState<number | null>(null);
   const [gameMode, setGameMode] = useState<'PvP' | 'PvAI' | 'AIvAI'>('PvAI');
   const [lastMove, setLastMove] = useState<number | null>(null);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
 
   // Trigger score update when component mounts to initialize the scoreboard
   useEffect(() => {
@@ -19,7 +20,10 @@ const GoBoard: React.FC<GoBoardProps> = ({ onScoreUpdate }) => {
   }, [engine, onScoreUpdate]);
 
   useEffect(() => {
-    if (engine.isGameOver()) return;
+    if (engine.isGameOver()) {
+      setShowWinnerModal(true);
+      return;
+    }
     
     let isAITurn = false;
     if (gameMode === 'AIvAI') isAITurn = true;
@@ -100,7 +104,12 @@ const GoBoard: React.FC<GoBoardProps> = ({ onScoreUpdate }) => {
     setBoard(newEngine.board);
     setTurn('B');
     setLastMove(null);
+    setShowWinnerModal(false);
   };
+
+  const closeModal = () => {
+    setShowWinnerModal(false);
+  }
 
   const passTurn = () => {
     engine.passTurn();
@@ -131,8 +140,8 @@ const GoBoard: React.FC<GoBoardProps> = ({ onScoreUpdate }) => {
         <button 
           onClick={resetGame}
           style={{ 
-            padding: '10px 25px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', 
-            color: '#fca5a5', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', borderRadius: '30px',
+            padding: '10px 25px', background: 'rgba(97, 239, 68, 0.1)', border: '1px solid rgba(125, 239, 68, 0.3)', 
+            color: '#c3fca5', cursor: 'pointer', fontSize: '1rem', fontWeight: '500', borderRadius: '30px',
             transition: 'all 0.2s ease-in-out'
           }}
           onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
@@ -189,6 +198,55 @@ const GoBoard: React.FC<GoBoardProps> = ({ onScoreUpdate }) => {
           <option value="AIvAI" style={{ background: '#222' }}>🖥️ AI vs AI</option>
         </select>
       </div>
+
+      {/* WINNER POPUP MODAL */}
+      {showWinnerModal && finalScore && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          zIndex: 9999, backdropFilter: 'blur(5px)'
+        }}>
+          <div style={{
+            background: '#1a1a1a', padding: '40px', borderRadius: '20px',
+            border: '2px solid rgba(255,255,255,0.1)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            textAlign: 'center', minWidth: '300px',
+            display: 'flex', flexDirection: 'column', gap: '20px'
+          }}>
+            <h2 style={{ margin: 0, color: '#fff', fontSize: '2rem' }}>
+              {finalScore.blackArea > finalScore.whiteArea ? 'Black Wins!' : (finalScore.whiteArea > finalScore.blackArea ? 'White Wins!' : 'It\'s a Tie!')}
+            </h2>
+            <div style={{ fontSize: '1.2rem', color: '#ccc' }}>
+              <div>Black points: <span style={{ color: '#fff', fontWeight: 'bold' }}>{finalScore.blackArea}</span></div>
+              <div>White points: <span style={{ color: '#fff', fontWeight: 'bold' }}>{finalScore.whiteArea}</span> (including {engine.komi} Komi)</div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
+              <button 
+                onClick={closeModal}
+                style={{
+                  padding: '12px 25px', background: 'rgba(255,255,255,0.1)', color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.2)', borderRadius: '30px',
+                  cursor: 'pointer', fontSize: '1rem', fontWeight: '500'
+                }}
+              >
+                Close View
+              </button>
+              <button 
+                onClick={resetGame}
+                style={{
+                  padding: '12px 25px', background: '#3b82f6', color: '#fff',
+                  border: 'none', borderRadius: '30px',
+                  cursor: 'pointer', fontSize: '1rem', fontWeight: '600'
+                }}
+              >
+                Play Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ZONE DE JEU (Plateau + Panneau Latéral) */}
       <div style={{ display: 'flex', gap: '50px', justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap' }}>
